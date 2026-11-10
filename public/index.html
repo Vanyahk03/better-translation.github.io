@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>桜 Translation Garden · 樱花译园</title>
+<style>
+  :root {
+    --pink: #f8c8dc;
+    --pink-deep: #e8a0bf;
+    --pink-dark: #c97fa0;
+    --gold: #d4af37;
+    --gold-light: #e6c25a;
+    --cream: #fdf6f0;
+    --cream-dark: #f5ece4;
+    --text: #4a3542;
+    --text-light: #7a6572;
+    --white: #ffffff;
+    --shadow: 0 2px 12px rgba(201, 127, 160, 0.15);
+    --shadow-lg: 0 6px 24px rgba(201, 127, 160, 0.22);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      radial-gradient(1.5px 1.5px at 20% 30%, var(--pink-deep) 50%, transparent 50%),
+      radial-gradient(1px 1px at 75% 15%, var(--gold) 50%, transparent 50%),
+      radial-gradient(1.5px 1.5px at 45% 70%, var(--pink) 50%, transparent 50%),
+      radial-gradient(1px 1px at 90% 60%, var(--gold-light) 50%, transparent 50%),
+      radial-gradient(1px 1px at 10% 85%, var(--pink-dark) 50%, transparent 50%),
+      radial-gradient(1.5px 1.5px at 60% 40%, var(--gold) 50%, transparent 50%);
+    opacity: 0.35;
+  }
+
+  #trail-canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(253, 246, 240, 0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid var(--pink);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--pink-dark);
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo .star { color: var(--gold); font-size: 1.1rem; }
+
+  .header-spacer { flex: 1; }
+
+  .lang-toggle {
+    display: flex;
+    border: 2px solid var(--pink-deep);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .lang-toggle button {
+    border: none;
+    background: transparent;
+    padding: 6px 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-light);
+    transition: all 0.25s;
+  }
+
+  .lang-toggle button.active {
+    background: var(--pink-deep);
+    color: var(--white);
+  }
+
+  .lang-toggle button:hover:not(.active) { background: var(--pink); }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+  }
+
+  @media (max-width: 1100px) { .app { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--pink);
+    overflow: hidden;
+  }
+
+  .panel-header {
+    background: linear-gradient(135deg, var(--pink) 0%, var(--pink-deep) 100%);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--white);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.3px;
+  }
+
+  .panel-header .badge {
+    background: rgba(255,255,255,0.25);
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .panel-body { padding: 20px; }
+
+  .editor-section { margin-bottom: 20px; }
+
+  .editor-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--pink-dark);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .editor-label::before { content: '✦'; color: var(--gold); }
+
+  .editor-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 14px 16px;
+    border: 2px solid var(--pink);
+    border-radius: var(--radius-sm);
+    background: var(--cream);
+    font-family: inherit;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text);
+    resize: vertical;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    outline: none;
+  }
+
+  .editor-textarea:focus {
+    border-color: var(--pink-deep);
+    box-shadow: 0 0 0 4px rgba(232, 160, 191, 0.2);
+    background: var(--white);
+  }
+
+  .editor-textarea::placeholder { color: #b8a0ac; }
+
+  .tone-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .tone-row label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light);
+  }
+
+  select.tone-select {
+    padding: 6px 12px;
+    border: 2px solid var(--pink);
+    border-radius: 999px;
+    background: var(--cream);
+    font-family: inherit;
+    font-size: 0.82rem;
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.25s;
+  }
+
+  select.tone-select:focus { border-color: var(--pink-deep); }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 26px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--pink-deep), var(--pink-dark));
+    color: var(--white);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(201, 127, 160, 0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(201, 127, 160, 0.45);
+  }
+
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .issues-list { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+
+  .issue-card {
+    border: 1.5px solid var(--pink);
+    border-left: 4px solid var(--gold);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    background: var(--cream);
+    transition: opacity 0.3s, transform 0.3s;
+    animation: slideIn 0.35s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .issue-card.resolved {
+    opacity: 0.45;
+    text-decoration: line-through;
+    border-left-color: #6bc47a;
+  }
+
+  .issue-type {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--pink-dark);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .issue-type .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--gold);
+    display: inline-block;
+  }
+
+  .issue-desc {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .issue-suggestion {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    font-style: italic;
+    margin-bottom: 10px;
+    padding: 6px 10px;
+    background: rgba(212, 175, 55, 0.08);
+    border-radius: 6px;
+  }
+
+  /* ===== 新增：参考改写样句 ===== */
+  .issue-example {
+    border: 1.5px dashed var(--pink-deep);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, rgba(248,200,220,0.18), rgba(255,255,255,0.6));
+  }
+
+  .issue-example-label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--pink-dark);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .issue-example-label::before { content: '✎'; color: var(--gold); }
+
+  .issue-example-text {
+    font-size: 0.84rem;
+    line-height: 1.6;
+    color: var(--text);
+    font-style: italic;
+  }
+
+  .btn-copy-example {
+    margin-top: 6px;
+    padding: 4px 12px;
+    border: 1px solid var(--pink-deep);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--pink-dark);
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-copy-example:hover { background: var(--pink-deep); color: var(--white); }
+
+  .btn-resolve {
+    padding: 6px 16px;
+    border: 1.5px solid var(--gold);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--pink-dark);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+
+  .btn-resolve:hover { background: var(--gold); color: var(--white); }
+
+  .btn-resolve:disabled { opacity: 0.4; cursor: default; }
+
+  .score-bar-wrap {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .score-bar {
+    flex: 1;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--cream-dark);
+    overflow: hidden;
+    border: 1px solid var(--pink);
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--pink-deep), var(--gold));
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 0%;
+  }
+
+  .score-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--pink-dark);
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .garden-panel .panel-header {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+  }
+
+  .seed-area {
+    text-align: center;
+    padding: 24px 16px;
+    background: var(--cream);
+    border-radius: var(--radius-sm);
+    border: 2px dashed var(--pink);
+    margin-bottom: 14px;
+    transition: all 0.3s;
+  }
+
+  .seed-button {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 40px;
+    border: 2px solid var(--gold);
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--pink), var(--pink-deep));
+    color: var(--white);
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(201, 127, 160, 0.35);
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+
+  .seed-button:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 24px rgba(201, 127, 160, 0.5);
+  }
+
+  .seed-button:active { transform: translateY(0) scale(1); }
+
+  .seed-button .seed-big { font-size: 2.4rem; line-height: 1; }
+
+  .seed-button .seed-hint {
+    font-size: 0.72rem;
+    font-weight: 500;
+    opacity: 0.85;
+  }
+
+  .plant-visual-wrap {
+    position: relative;
+    display: inline-block;
+  }
+
+  .plant-visual {
+    font-size: 4rem;
+    line-height: 1;
+    margin-bottom: 10px;
+    transition: transform 0.4s;
+    display: inline-block;
+  }
+
+  .plant-visual.grow { animation: growPop 0.6s ease; }
+
+  @keyframes growPop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.25) rotate(-5deg); }
+    70% { transform: scale(1.1) rotate(3deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+
+  .plant-visual.reveal { animation: revealPop 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+  @keyframes revealPop {
+    0% { transform: scale(0.4) rotate(-25deg); opacity: 0.2; }
+    40% { transform: scale(1.5) rotate(12deg); opacity: 1; }
+    65% { transform: scale(1.15) rotate(-6deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+
+  .reveal-halo {
+    position: absolute;
+    inset: 50% 50%;
+    width: 0; height: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(212,175,55,0.55), rgba(248,200,220,0.3), transparent 70%);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .reveal-halo.fire { animation: haloExpand 1.2s ease-out; }
+
+  @keyframes haloExpand {
+    0% { width: 0; height: 0; opacity: 0.9; }
+    70% { width: 260px; height: 260px; opacity: 0.4; }
+    100% { width: 320px; height: 320px; opacity: 0; }
+  }
+
+  .plant-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--pink-dark);
+    min-height: 1.4em;
+  }
+
+  .plant-name.mystery { color: var(--text-light); font-style: italic; font-weight: 500; }
+
+  .plant-stage-label {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    margin-top: 2px;
+  }
+
+  .growth-pips {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .pip {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--pink-deep);
+    background: transparent;
+    transition: background 0.3s;
+  }
+
+  .pip.filled {
+    background: var(--gold);
+    border-color: var(--gold);
+    box-shadow: 0 0 6px rgba(212, 175, 55, 0.5);
+  }
+
+  .action-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .btn-action {
+    flex: 1;
+    padding: 10px 8px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .btn-action .act-icon { font-size: 1.2rem; }
+
+  .btn-water {
+    background: rgba(100, 180, 255, 0.18);
+    color: #3a7cc4;
+    border: 1.5px solid rgba(100, 180, 255, 0.4);
+  }
+  .btn-water:hover:not(:disabled) { background: rgba(100, 180, 255, 0.35); }
+
+  .btn-fertilize {
+    background: rgba(212, 175, 55, 0.18);
+    color: #a07d10;
+    border: 1.5px solid rgba(212, 175, 55, 0.4);
+  }
+  .btn-fertilize:hover:not(:disabled) { background: rgba(212, 175, 55, 0.35); }
+
+  .btn-action:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .tqi-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, rgba(248, 200, 220, 0.3), rgba(212, 175, 55, 0.1));
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--pink);
+    margin-bottom: 8px;
+  }
+
+  .tqi-display .label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-light);
+  }
+
+  .tqi-display .value {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--pink-dark);
+  }
+
+  .next-reward {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    text-align: center;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  .next-reward .ready { color: var(--gold); font-weight: 700; }
+
+  .vocab-panel .panel-header {
+    background: linear-gradient(135deg, #9b7ebd 0%, #b89fd4 100%);
+  }
+
+  .vocab-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .vocab-input {
+    flex: 1;
+    padding: 9px 14px;
+    border: 2px solid var(--pink);
+    border-radius: var(--radius-sm);
+    background: var(--cream);
+    font-family: inherit;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.25s;
+  }
+  .vocab-input:focus { border-color: #9b7ebd; background: var(--white); }
+
+  .btn-add-vocab {
+    padding: 9px 18px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: #9b7ebd;
+    color: var(--white);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.25s;
+  }
+  .btn-add-vocab:hover { background: #8566a8; }
+
+  .vocab-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .vocab-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    background: var(--cream);
+    border-radius: 8px;
+    border: 1px solid var(--pink);
+    font-size: 0.85rem;
+    animation: slideIn 0.3s ease;
+  }
+
+  .vocab-item .word { font-weight: 600; color: var(--text); }
+
+  .vocab-item .remove {
+    background: none;
+    border: none;
+    color: var(--pink-dark);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  .vocab-item .remove:hover { opacity: 1; }
+
+  .vocab-empty {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    padding: 16px;
+    font-style: italic;
+  }
+
+  .collection-panel { margin-top: 24px; }
+
+  .collection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+    padding: 4px 0;
+  }
+
+  .collection-card {
+    position: relative;
+    text-align: center;
+    padding: 14px 8px;
+    background: linear-gradient(135deg, rgba(212,175,55,0.12), rgba(248,200,220,0.25));
+    border: 1.5px solid var(--gold);
+    border-radius: var(--radius-sm);
+    animation: slideIn 0.4s ease;
+  }
+
+  .collection-card .icon { font-size: 2.2rem; }
+
+  .collection-card .cname {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--pink-dark);
+    margin-top: 4px;
+  }
+
+  .collection-card .cdate {
+    font-size: 0.65rem;
+    color: var(--text-light);
+    margin-top: 2px;
+  }
+
+  .collection-card .count-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--gold);
+    color: #4a3542;
+    font-size: 0.68rem;
+    font-weight: 800;
+    min-width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    box-shadow: 0 2px 6px rgba(212,175,55,0.5);
+  }
+
+  .collection-empty {
+    text-align: center;
+    padding: 24px;
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-style: italic;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--pink-dark);
+    color: var(--white);
+    padding: 12px 28px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 10000;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 90vw;
+    text-align: center;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .toast.gold { background: linear-gradient(135deg, var(--gold), var(--gold-light)); color: #4a3542; }
+
+  .highlight-popup {
+    position: absolute;
+    display: none;
+    background: var(--white);
+    border: 2px solid var(--pink-deep);
+    border-radius: 999px;
+    padding: 5px 10px;
+    box-shadow: var(--shadow-lg);
+    z-index: 500;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .highlight-popup.visible { display: flex; }
+
+  .hl-dot {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+  }
+  .hl-dot:hover { transform: scale(1.2); }
+
+  @media (max-width: 700px) {
+    .app { padding: 14px; gap: 16px; }
+    header { padding: 10px 14px; }
+    .logo { font-size: 1.1rem; }
+    .seed-button { padding: 16px 24px; font-size: 0.9rem; }
+    .seed-button .seed-big { font-size: 2rem; }
+    .plant-visual { font-size: 3.2rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    #trail-canvas { display: none; }
+  }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--cream-dark); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--pink-deep); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--pink-dark); }
+
+  mark.hl-pink { background: rgba(248, 200, 220, 0.65); border-radius: 3px; padding: 0 2px; }
+  mark.hl-gold { background: rgba(212, 175, 55, 0.35); border-radius: 3px; padding: 0 2px; }
+  mark.hl-blue { background: rgba(100, 180, 255, 0.3); border-radius: 3px; padding: 0 2px; }
+</style>
+<link rel="stylesheet" href="garden.css">
+</head>
+<body>
+
+<canvas id="trail-canvas" aria-hidden="true"></canvas>
+
+<header>
+  <div class="logo"><span class="star">✦</span> 桜 Translation Garden</div>
+  <button class="garden-switch" id="gardenSwitch" type="button" aria-label="打开我的花园" aria-controls="app"><span aria-hidden="true">🌷</span><span id="gardenSwitchLabel">我的花园</span></button>
+  <div class="header-spacer"></div>
+  <div class="lang-toggle" id="langToggle" role="group" aria-label="Language">
+    <button class="active" data-lang="en">EN</button>
+    <button data-lang="zh">中文</button>
+  </div>
+</header>
+
+<div class="app">
+  <section class="welcome translation-view"><div class="eyebrow">YOUR LITTLE LANGUAGE SANCTUARY</div><h1>把每一次表达，种成小花</h1><p>认真翻译，温柔进步。让语言和你的小花园一起生长。</p><span class="mascot" aria-hidden="true">🌸<br>˶ᵔ ᵕ ᵔ˶</span></section>
+  <div class="translation-view">
+    <div class="panel">
+      <div class="panel-header">
+        <span data-i18n="editorTitle">✦ Translation Quality Checker</span>
+        <span class="badge"><span data-i18n="tqiBadge">TQI: </span><span id="tqiHeader">0</span></span>
+      </div>
+      <div class="panel-body">
+        <div class="editor-section">
+          <div class="editor-label" data-i18n="sourceLabel">Source Text</div>
+          <textarea class="editor-textarea" id="sourceText" placeholder="Paste your source text here…" data-i18n-placeholder="sourcePlaceholder"></textarea>
+        </div>
+        <div class="editor-section">
+          <div class="editor-label" data-i18n="targetLabel">Your Translation</div>
+          <textarea class="editor-textarea" id="targetText" placeholder="Type your translation here…" data-i18n-placeholder="targetPlaceholder"></textarea>
+          <div class="tone-row">
+            <label data-i18n="toneLabel">Tone:</label>
+            <select class="tone-select" id="toneSelect">
+              <option value="neutral" data-i18n="toneNeutral">Neutral</option>
+              <option value="formal" data-i18n="toneFormal">Formal</option>
+              <option value="casual" data-i18n="toneCasual">Casual</option>
+              <option value="literary" data-i18n="toneLiterary">Literary</option>
+              <option value="technical" data-i18n="toneTechnical">Technical</option>
+            </select>
+          </div>
+        </div>
+        <p class="connection-note">AI 服务会随网站自动连接。文字只在点击检测时发送。</p>
+        <button class="btn-primary" id="checkBtn" aria-label="Check translation quality"><span>✦</span> <span data-i18n="checkQuality">Check Translation Quality</span></button>
+        <button class="btn-primary" id="cancelBtn" hidden>取消检测</button>
+        <p id="requestStatus" role="status" aria-live="polite">准备好后，开始今天的翻译练习吧。</p>
+        <section id="reviewResult" hidden><h2>🌼 这一版，更进一步</h2><p id="reviewSummary"></p><div class="comparison"><article><h3>原文</h3><div id="reviewSource" class="selectable"></div></article><article><h3>你的译文</h3><div id="reviewTarget" class="selectable"></div></article><article><h3>润色后的译文</h3><div id="polishedText" class="selectable"></div><button id="copyPolished" class="btn-add-vocab">复制润色译文</button></article></div></section>
+
+        <div class="score-bar-wrap" hidden><div class="score-bar"><div class="score-bar-fill" id="scoreFill"></div></div><div class="score-label" id="scoreLabel">—</div></div>
+
+        <div class="issues-list" id="issuesList"></div>
+        <div class="next-reward" id="refreshHint" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <div class="panel vocab-panel" style="margin-top:24px;">
+      <div class="panel-header">
+        <span data-i18n="vocabTitle">✿ Vocabulary Notebook</span>
+        <span class="badge" id="vocabCount">0</span>
+      </div>
+      <div class="panel-body">
+        <div class="vocab-input-row">
+          <input class="vocab-input" id="vocabInput" placeholder="Add a word or phrase…" data-i18n-placeholder="vocabPlaceholder">
+          <button class="btn-add-vocab" id="addVocabBtn" data-i18n="addBtn">Add</button>
+        </div>
+        <p class="selection-hint">选中文字后右键加入生词本，或按住 Shift 拖选／Shift + 方向键收藏。支持原文、译文与修改意见。生词保存在当前浏览器。</p>
+        <div class="vocab-list" id="vocabList">
+          <div class="vocab-empty" data-i18n="vocabEmpty">No saved words yet. Select text or type above to add.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="garden-view" id="gardenView" hidden>
+    <section class="garden-welcome"><div class="eyebrow">A LITTLE PLACE TO GROW</div><h1>我的花园 🌷</h1><p>每一次认真修改，都让新芽离盛开更近一点。</p></section>
+    <div class="panel garden-panel">
+      <div class="panel-header">
+        <span data-i18n="gardenTitle">✧ My Garden</span>
+      </div>
+      <div class="panel-body">
+        <div class="seed-area" id="seedArea">
+          <button class="seed-button" id="plantSeedBtn" aria-label="Plant a random seed">
+            <span class="seed-big">🌰</span>
+            <span id="plantSeedLabel" data-i18n="plantSeed">Plant a Seed</span>
+            <span class="seed-hint" data-i18n="seedHint">Random type · revealed when mature</span>
+          </button>
+        </div>
+
+        <div class="plant-display" id="plantDisplay" style="display:none;text-align:center;padding:16px;background:var(--cream);border-radius:var(--radius-sm);border:1.5px solid var(--pink);margin-bottom:14px;">
+          <div class="plant-visual-wrap">
+            <div class="reveal-halo" id="revealHalo"></div>
+            <div class="plant-visual" id="plantVisual">🌰</div>
+          </div>
+          <div class="plant-name mystery" id="plantName">???</div>
+          <div class="plant-stage-label" id="plantStageLabel" data-i18n="stageSeed">Seed</div>
+          <div class="growth-pips" id="growthPips">
+            <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+          </div>
+        </div>
+
+        <div class="tqi-display">
+          <span class="label" data-i18n="tqiLabel">Translation Quality Improvements</span>
+          <span class="value" id="tqiSidebar">0</span>
+        </div>
+        <div class="next-reward" id="nextReward" data-i18n="nextWater">Next watering at 5 TQI</div>
+
+        <div class="action-row">
+          <button class="btn-action btn-water" id="waterBtn" aria-label="Water the plant">
+            <span class="act-icon">💧</span>
+            <span data-i18n="waterBtn">Water</span>
+          </button>
+          <button class="btn-action btn-fertilize" id="fertilizeBtn" aria-label="Fertilize the plant">
+            <span class="act-icon">✨</span>
+            <span data-i18n="fertilizeBtn">Fertilize</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel collection-panel">
+      <div class="panel-header">
+        <span data-i18n="collectionTitle">★ Collection Chart</span>
+        <span class="badge" id="collectionCount">0</span>
+      </div>
+      <div class="panel-body">
+        <div class="collection-grid" id="collectionGrid">
+          <div class="collection-empty" data-i18n="collectionEmpty">Harvest mature plants to fill your collection.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="highlight-popup" id="hlPopup" role="menu" aria-label="加入生词本"></div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   I18N
+   ============================================================ */
+const i18n = {
+  en: {
+    editorTitle: '✦ Translation Quality Checker',
+    sourceLabel: 'Source Text',
+    targetLabel: 'Your Translation',
+    sourcePlaceholder: 'Paste your source text here…',
+    targetPlaceholder: 'Type your translation here…',
+    toneLabel: 'Tone:',
+    toneNeutral: 'Neutral', toneFormal: 'Formal', toneCasual: 'Casual',
+    toneLiterary: 'Literary', toneTechnical: 'Technical',
+    checkQuality: 'Check Translation Quality',
+    tqiBadge: 'TQI: ',
+    vocabTitle: '✿ Vocabulary Notebook',
+    vocabPlaceholder: 'Add a word or phrase…',
+    addBtn: 'Add',
+    vocabEmpty: 'No saved words yet. Select text or type above to add.',
+    gardenTitle: '✧ My Garden',
+    plantSeed: 'Plant a Seed',
+    harvestBtn: 'Harvest & Plant New',
+    seedHint: 'Random type · revealed when mature',
+    stageSeed: 'Seed', stageSprout: 'Sprout', stageGrowing: 'Growing', stageMature: 'Mature',
+    tqiLabel: 'Translation Quality Improvements',
+    nextWater: 'Next watering at 5 TQI',
+    waterBtn: 'Water', fertilizeBtn: 'Fertilize',
+    collectionTitle: '★ Collection Chart',
+    collectionEmpty: 'Harvest mature plants to fill your collection.',
+    waterSuccess: '💧 Watered! Your plant is happy.',
+    waterLimit: '💧 Already watered today. Come back tomorrow!',
+    waterNotReady: '💧 Need 5 more TQI to water.',
+    fertSuccess: '✨ Fertilized! Your plant grew bigger!',
+    fertNotReady: '✨ Need 50 more TQI to fertilize.',
+    matureMsg: '🌸 Your plant is fully mature! Added to your collection.',
+    mysteryPlant: '???',
+    revealMsg: '🎉 Your plant is a {{name}}!',
+    resolveMsg: '✔ Issue resolved! +1 TQI',
+    checkFirst: '⚠ Please enter text in both fields.',
+    vocabAdded: 'Added to vocabulary!',
+    vocabRemoved: 'Removed from vocabulary.',
+    toastSeed: '🌱 A mysterious seed is planted! Improve translations to help it grow.',
+    alreadyMature: '⚠ This plant is already mature. Harvest it first!',
+    exampleLabel: 'Reference Rewrite',
+    copyExample: 'Copy',
+    copied: 'Copied!',
+    refreshHint: 'Results are not saved after refresh. Click "Check" again to re-analyze.',
+    termInconsistency: 'Terminology Inconsistency',
+    toneMismatch: 'Tone Mismatch',
+    literalPhrasing: 'Literal / Awkward Phrasing',
+    grammarError: 'Grammar / Spelling',
+    sugTerm: 'Ensure the same term is used consistently throughout the document.',
+    sugToneFormal: 'This section sounds too casual for a formal tone. Consider more formal vocabulary.',
+    sugToneCasual: 'This section sounds overly formal. Try a more relaxed phrasing.',
+    sugToneLiterary: 'Consider more evocative, literary word choices.',
+    sugToneTechnical: 'Use precise technical terminology instead of colloquial wording.',
+    sugLiteral: 'This reads like a literal translation. Rephrase for natural flow.',
+    sugGrammar: 'Check spelling and grammar in this segment.',
+    descTerm: 'The term "{{term}}" appears with different translations.',
+    descTone: 'The tone register does not match the selected "{{tone}}" style.',
+    descLiteral: 'The phrase "{{phrase}}" may be too literal or awkward.',
+    descGrammar: 'Possible issue: "{{word}}" may be misspelled or grammatically incorrect.',
+    exTerm: 'Use "{{term}}" consistently. Example: "All references to {{term}} should use the same translated term."',
+    exToneFormal: 'Instead of "I think this is kind of important," try: "This matter is of considerable importance."',
+    exToneCasual: 'Instead of "It is imperative that we proceed," try: "Let\'s get going!"',
+    exToneLiterary: 'Instead of "The sun went down," try: "The sun sank into a sea of amber light."',
+    exToneTechnical: 'Instead of "the thing that makes it work," try: "the operating mechanism."',
+    exLiteral: 'Instead of "{{phrase}}," try a more natural expression that conveys the same meaning.',
+    exGrammar: 'Review the spelling of "{{word}}." Example: verify whether it should be capitalized or hyphenated.'
+  },
+  zh: {
+    editorTitle: '✦ 翻译质量检测',
+    sourceLabel: '原文',
+    targetLabel: '你的译文',
+    sourcePlaceholder: '在此粘贴原文…',
+    targetPlaceholder: '在此输入译文…',
+    toneLabel: '语气：',
+    toneNeutral: '中性', toneFormal: '正式', toneCasual: '口语',
+    toneLiterary: '文学', toneTechnical: '技术',
+    checkQuality: '检测翻译质量',
+    tqiBadge: '提升次数：',
+    vocabTitle: '✿ 生词本',
+    vocabPlaceholder: '添加单词或短语…',
+    addBtn: '添加',
+    vocabEmpty: '还没有保存的词汇。选中文字或在上方输入来添加。',
+    gardenTitle: '✧ 我的花园',
+    plantSeed: '种下一颗种子',
+    harvestBtn: '收获并种新种子',
+    seedHint: '随机种类 · 成熟时揭晓',
+    stageSeed: '种子', stageSprout: '发芽', stageGrowing: '生长中', stageMature: '成熟体',
+    tqiLabel: '翻译质量提升次数',
+    nextWater: '再提升 5 次可浇水',
+    waterBtn: '浇水', fertilizeBtn: '施肥',
+    collectionTitle: '★ 收藏图表',
+    collectionEmpty: '收获成熟植物来填满你的收藏。',
+    waterSuccess: '💧 浇水成功！植物很开心。',
+    waterLimit: '💧 今天已经浇过水了，明天再来吧！',
+    waterNotReady: '💧 还需要提升 5 次翻译质量才能浇水。',
+    fertSuccess: '✨ 施肥成功！植物长大了一点！',
+    fertNotReady: '✨ 还需要提升 50 次翻译质量才能施肥。',
+    matureMsg: '🌸 植物已完全成熟！已加入你的收藏。',
+    mysteryPlant: '？？？',
+    revealMsg: '🎉 你的植物是{{name}}！',
+    resolveMsg: '✔ 问题已解决！+1 质量提升',
+    checkFirst: '⚠ 请在两个输入框中都输入文字。',
+    vocabAdded: '已加入生词本！',
+    vocabRemoved: '已从生词本移除。',
+    toastSeed: '🌱 一颗神秘的种子已种下！提升翻译质量来帮助它成长吧。',
+    alreadyMature: '⚠ 这株植物已经成熟了，请先收获！',
+    exampleLabel: '参考改写',
+    copyExample: '复制',
+    copied: '已复制！',
+    refreshHint: '刷新后结果不会保留，请重新点击"检测"进行分析。',
+    termInconsistency: '术语不一致',
+    toneMismatch: '语气不匹配',
+    literalPhrasing: '直译 / 生硬表达',
+    grammarError: '语法 / 拼写',
+    sugTerm: '确保全文使用一致的术语翻译。',
+    sugToneFormal: '这段文字对于正式语气来说太随意了，请使用更正式的词汇。',
+    sugToneCasual: '这段文字过于正式，尝试更轻松的表达。',
+    sugToneLiterary: '考虑使用更具文学性的词汇。',
+    sugToneTechnical: '使用精确的技术术语而非口语化表达。',
+    sugLiteral: '这读起来像直译，请调整以使其自然流畅。',
+    sugGrammar: '请检查这一段的拼写和语法。',
+    descTerm: '术语“{{term}}”出现了不同的翻译。',
+    descTone: '语气与所选的“{{tone}}”风格不匹配。',
+    descLiteral: '短语“{{phrase}}”可能过于直译或生硬。',
+    descGrammar: '可能的问题：“{{word}}”拼写或语法有误。',
+    exTerm: '请统一使用“{{term}}”的同一译法。例如：“所有涉及 {{term}} 的地方都应使用相同的译名。”',
+    exToneFormal: '不要写“我觉得这个还挺重要的”，可以改为：“此事具有相当的重要性。”',
+    exToneCasual: '不要写“我们必须立即着手推进”，可以改为：“咱们赶紧开始吧！”',
+    exToneLiterary: '不要写“太阳下山了”，可以改为：“夕阳沉入一片琥珀色的光海。”',
+    exToneTechnical: '不要写“让它运转的那个东西”，可以改为：“运行机构”。',
+    exLiteral: '不要直译“{{phrase}}”，请用更自然的表达传达相同含义。',
+    exGrammar: '请检查“{{word}}”的拼写。例如：确认是否需要大写或加连字符。'
+  }
+};
+
+let currentLang = 'zh';
+
+function t(key, vars = {}) {
+  let str = (i18n[currentLang] && i18n[currentLang][key]) || i18n.en[key] || key;
+  Object.keys(vars).forEach(k => { str = str.replace(new RegExp('{{' + k + '}}', 'g'), vars[k]); });
+  return str;
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  tqi: 0,
+  tqiSinceWater: 0,
+  tqiSinceFertilize: 0,
+  lastWaterDate: null,
+  plant: null,
+  collection: [],
+  vocabulary: [],
+  resolvedIssues: new Set(),
+  isHarvestReady: false
+};
+
+let currentIssues = [];
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastTimer;
+function showToast(msg, gold = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (gold ? ' gold' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+/* ============================================================
+   LANGUAGE
+   ============================================================ */
+function applyLanguage() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    // 跳过动态控制的元素（由 updatePlantUI 等负责）
+    if (el.id === 'plantSeedLabel' || el.id === 'plantStageLabel') return;
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+  });
+
+  // 动态按钮文案
+  updatePlantSeedButton();
+  updatePlantUI();
+  updateNextReward();
+  updateCollectionUI();
+  renderVocabulary();
+  if (!document.getElementById('reviewResult').hidden) renderIssues(currentIssues);
+  document.getElementById('refreshHint').textContent = '可以反复修改、重新检测；每次 AI 检测可能产生 API 费用。';
+
+  document.querySelectorAll('.lang-toggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === currentLang);
+  });
+}
+
+document.getElementById('langToggle').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  currentLang = btn.dataset.lang;
+  applyLanguage();
+});
+
+/* ============================================================
+   CURSOR TRAIL
+   ============================================================ */
+(function initTrail() {
+  const canvas = document.getElementById('trail-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  const colors = ['#f8c8dc', '#e8a0bf', '#d4af37', '#e6c25a', '#ffffff'];
+  const maxParticles = 60;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  document.addEventListener('mousemove', e => {
+    for (let i = 0; i < 2; i++) {
+      if (particles.length < maxParticles) {
+        particles.push({
+          x: e.clientX + (Math.random() - 0.5) * 10,
+          y: e.clientY + (Math.random() - 0.5) * 10,
+          vx: (Math.random() - 0.5) * 1.5,
+          vy: (Math.random() - 0.5) * 1.5 - 0.5,
+          size: 1.5 + Math.random() * 2.5,
+          life: 1,
+          decay: 0.015 + Math.random() * 0.02,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          shape: Math.random() > 0.6 ? 'star' : 'dot'
+        });
+      }
+    }
+  });
+
+  function drawStar(cx, cy, spikes, outerR, innerR) {
+    let rot = Math.PI / 2 * 3;
+    const step = Math.PI / spikes;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerR);
+    for (let i = 0; i < spikes; i++) {
+      ctx.lineTo(cx + Math.cos(rot) * outerR, cy + Math.sin(rot) * outerR);
+      rot += step;
+      ctx.lineTo(cx + Math.cos(rot) * innerR, cy + Math.sin(rot) * innerR);
+      rot += step;
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.02;
+      p.life -= p.decay;
+      if (p.life <= 0) { particles.splice(i, 1); continue; }
+      ctx.globalAlpha = p.life * 0.7;
+      ctx.fillStyle = p.color;
+      if (p.shape === 'star') {
+        drawStar(p.x, p.y, 4, p.size * 2, p.size * 0.7);
+      } else {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+/* ============================================================
+   TRANSLATION CHECKER
+   ============================================================ */
+function generateIssues(source, target, tone) {
+  const issues = [];
+  if (!source.trim() || !target.trim()) return issues;
+
+  const srcWords = source.trim().split(/\s+/);
+  const tgtWords = target.trim().split(/\s+/);
+
+  if (srcWords.length > 3 && tgtWords.length > 3) {
+    const fakeTerm = srcWords[Math.floor(srcWords.length / 2)].replace(/[^a-zA-Z\u4e00-\u9fa5]/g, '');
+    if (fakeTerm.length > 2) {
+      issues.push({
+        id: 'term-' + Date.now() + '-1',
+        type: 'termInconsistency',
+        desc: t('descTerm', { term: fakeTerm }),
+        suggestion: t('sugTerm'),
+        example: t('exTerm', { term: fakeTerm })
+      });
+    }
+  }
+
+  if (tone !== 'neutral') {
+    const toneKey = 'sugTone' + tone.charAt(0).toUpperCase() + tone.slice(1);
+    const exKey = 'exTone' + tone.charAt(0).toUpperCase() + tone.slice(1);
+    issues.push({
+      id: 'tone-' + Date.now() + '-2',
+      type: 'toneMismatch',
+      desc: t('descTone', { tone: t('tone' + tone.charAt(0).toUpperCase() + tone.slice(1)) }),
+      suggestion: t(toneKey),
+      example: t(exKey)
+    });
+  }
+
+  if (tgtWords.length > 4) {
+    const phrase = tgtWords.slice(1, 4).join(' ');
+    issues.push({
+      id: 'literal-' + Date.now() + '-3',
+      type: 'literalPhrasing',
+      desc: t('descLiteral', { phrase: phrase }),
+      suggestion: t('sugLiteral'),
+      example: t('exLiteral', { phrase: phrase })
+    });
+  }
+
+  const longWord = tgtWords.find(w => w.length > 7);
+  if (longWord) {
+    issues.push({
+      id: 'grammar-' + Date.now() + '-4',
+      type: 'grammarError',
+      desc: t('descGrammar', { word: longWord }),
+      suggestion: t('sugGrammar'),
+      example: t('exGrammar', { word: longWord })
+    });
+  }
+
+  return issues;
+}
+
+function renderIssues(issues) {
+  const list = document.getElementById('issuesList');
+  list.innerHTML = '';
+  if (issues.length === 0) return;
+
+  issues.forEach(iss => {
+    const resolved = state.resolvedIssues.has(iss.id);
+    const card = document.createElement('div');
+    card.className = 'issue-card' + (resolved ? ' resolved' : '');
+    card.dataset.issueId = iss.id;
+    card.innerHTML = `
+      <div class="issue-type"><span class="dot"></span> ${t(iss.type)}</div>
+      <div class="issue-desc">${iss.desc}</div>
+      <div class="issue-suggestion">${iss.suggestion}</div>
+      ${iss.example ? `
+        <div class="issue-example">
+          <div class="issue-example-label">${t('exampleLabel')}</div>
+          <div class="issue-example-text">${iss.example}</div>
+          <button class="btn-copy-example">${t('copyExample')}</button>
+        </div>
+      ` : ''}
+      <button class="btn-resolve" ${resolved ? 'disabled' : ''}>
+        ${resolved ? '✔ Resolved' : '✔ Mark as Resolved'}
+      </button>
+    `;
+    card.querySelector('.btn-resolve').addEventListener('click', () => resolveIssue(iss.id, card));
+
+    const copyBtn = card.querySelector('.btn-copy-example');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        const text = iss.example;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            showToast(t('copied'));
+          }).catch(() => fallbackCopy(text));
+        } else {
+          fallbackCopy(text);
+        }
+      });
+    }
+
+    list.appendChild(card);
+  });
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showToast(t('copied')); } catch (e) {}
+  document.body.removeChild(ta);
+}
+
+function resolveIssue(id, card) {
+  if (state.resolvedIssues.has(id)) return;
+  state.resolvedIssues.add(id);
+  card.classList.add('resolved');
+  const btn = card.querySelector('.btn-resolve');
+  btn.disabled = true;
+  btn.textContent = '✔ Resolved';
+  awardTQI(1);
+  showToast(t('resolveMsg'), true);
+  updateScoreBar();
+}
+
+function updateScoreBar() {
+  if (currentIssues.length === 0) {
+    document.getElementById('scoreFill').style.width = '100%';
+    document.getElementById('scoreLabel').textContent = '100%';
+    return;
+  }
+  const resolved = currentIssues.filter(i => state.resolvedIssues.has(i.id)).length;
+  const pct = Math.round((resolved / currentIssues.length) * 100);
+  document.getElementById('scoreFill').style.width = pct + '%';
+  document.getElementById('scoreLabel').textContent = pct + '%';
+}
+
+/* Legacy demo checker disabled: the real request flow lives in garden.js. */
+function legacyCheck() {
+  const source = document.getElementById('sourceText').value;
+  const target = document.getElementById('targetText').value;
+  const tone = document.getElementById('toneSelect').value;
+
+  if (!source.trim() || !target.trim()) {
+    showToast(t('checkFirst'));
+    return;
+  }
+
+  state.resolvedIssues.clear();
+  currentIssues = generateIssues(source, target, tone);
+  renderIssues(currentIssues);
+  updateScoreBar();
+
+  if (currentIssues.length === 0) {
+    document.getElementById('scoreFill').style.width = '100%';
+    document.getElementById('scoreLabel').textContent = '100%';
+  }
+}
+
+/* ============================================================
+   TQI
+   ============================================================ */
+function awardTQI(amount) {
+  state.tqi += amount;
+  state.tqiSinceWater += amount;
+  state.tqiSinceFertilize += amount;
+  updateTQIDisplay();
+  updateNextReward();
+  updateActionButtons();
+  saveState();
+}
+
+function updateTQIDisplay() {
+  document.getElementById('tqiHeader').textContent = state.tqi;
+  document.getElementById('tqiSidebar').textContent = state.tqi;
+}
+
+function updateNextReward() {
+  const el = document.getElementById('nextReward');
+  if (!state.plant) {
+    el.textContent = currentLang === 'zh' ? '种下种子后开始成长' : 'Plant a seed to begin';
+    return;
+  }
+  if (state.plant.stage === 'mature') {
+    el.textContent = currentLang === 'zh' ? '已成熟 · 可收获' : 'Mature · ready to harvest';
+    return;
+  }
+
+  const canWater = state.tqiSinceWater >= 5 && canWaterToday();
+  const canFert = state.tqiSinceFertilize >= 50 && state.plant.fertilizerCount < 3;
+
+  const parts = [];
+  if (canWater) {
+    parts.push(`<span class="ready">${currentLang === 'zh' ? '💧 可浇水' : '💧 Water ready'}</span>`);
+  } else {
+    const toWater = Math.max(0, 5 - state.tqiSinceWater);
+    parts.push(currentLang === 'zh' ? `再提升 ${toWater} 次可浇水` : `Water in ${toWater} TQI`);
+  }
+  if (canFert) {
+    parts.push(`<span class="ready">${currentLang === 'zh' ? '✨ 可施肥' : '✨ Fertilize ready'}</span>`);
+  } else if (state.plant.fertilizerCount < 3) {
+    const toFert = Math.max(0, 50 - state.tqiSinceFertilize);
+    parts.push(currentLang === 'zh' ? `${toFert} 次可施肥` : `Fertilize in ${toFert} TQI`);
+  }
+  el.innerHTML = parts.join(' · ');
+}
+
+// 本地日期，避免 UTC 时区偏差
+function todayLocal() {
+  try {
+    return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+  } catch (e) {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+}
+
+function canWaterToday() {
+  return state.lastWaterDate !== todayLocal();
+}
+
+function updateActionButtons() {
+  const waterBtn = document.getElementById('waterBtn');
+  const fertBtn = document.getElementById('fertilizeBtn');
+  const plantExists = state.plant && state.plant.stage !== 'mature';
+  waterBtn.disabled = !plantExists || state.tqiSinceWater < 5 || !canWaterToday();
+  fertBtn.disabled = !plantExists || state.tqiSinceFertilize < 50 || (state.plant && state.plant.fertilizerCount >= 3);
+}
+
+/* ============================================================
+   PLANT — 随机种子
+   ============================================================ */
+const PLANT_TYPES = ['flower', 'grain', 'shrub', 'tree'];
+const MYSTERY_ICONS = { seed: '🌰', sprout: '🌱', growing: '🌿' };
+const MATURE_ICONS = { flower: '🌸', grain: '🌾', shrub: '🌳', tree: '🌳' };
+const PLANT_NAMES = {
+  flower: { en: 'Flower', zh: '花' },
+  grain:  { en: 'Grain', zh: '粮食' },
+  shrub:  { en: 'Shrub', zh: '灌木' },
+  tree:   { en: 'Tree', zh: '树' }
+};
+
+function pickRandomPlantType() {
+  return PLANT_TYPES[Math.floor(Math.random() * PLANT_TYPES.length)];
+}
+
+function updatePlantSeedButton() {
+  const label = document.getElementById('plantSeedLabel');
+  if (!label) return;
+  if (state.isHarvestReady) {
+    label.textContent = t('harvestBtn');
+    label.removeAttribute('data-i18n');
+  } else {
+    label.textContent = t('plantSeed');
+    label.setAttribute('data-i18n', 'plantSeed');
+  }
+  const hint = document.querySelector('#plantSeedBtn .seed-hint');
+  if (hint) hint.textContent = t('seedHint');
+}
+
+document.getElementById('plantSeedBtn').addEventListener('click', () => {
+  if (state.plant && state.plant.stage !== 'mature') {
+    showToast(t('alreadyMature'));
+    return;
+  }
+  const type = pickRandomPlantType();
+  state.plant = { type: type, stage: 'seed', fertilizerCount: 0 };
+  state.tqiSinceWater = 0;
+  state.tqiSinceFertilize = 0;
+  state.lastWaterDate = null;
+  state.isHarvestReady = false;
+
+  document.getElementById('seedArea').style.display = 'none';
+  document.getElementById('plantDisplay').style.display = 'block';
+
+  updatePlantUI();
+  updatePlantSeedButton();
+  updateActionButtons();
+  updateNextReward();
+  showToast(t('toastSeed'));
+  saveState();
+});
+
+function updatePlantUI() {
+  const vis = document.getElementById('plantVisual');
+  const name = document.getElementById('plantName');
+  const stageLabel = document.getElementById('plantStageLabel');
+  const pips = document.getElementById('growthPips');
+
+  if (!state.plant) {
+    document.getElementById('seedArea').style.display = 'block';
+    document.getElementById('plantDisplay').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('seedArea').style.display = state.plant.stage === 'mature' ? 'block' : 'none';
+  document.getElementById('plantDisplay').style.display = 'block';
+
+  const p = state.plant;
+
+  if (p.stage === 'mature') {
+    vis.textContent = MATURE_ICONS[p.type] || '🌳';
+    name.textContent = PLANT_NAMES[p.type] ? PLANT_NAMES[p.type][currentLang] : p.type;
+    name.classList.remove('mystery');
+  } else {
+    vis.textContent = MYSTERY_ICONS[p.stage] || '🌰';
+    name.textContent = t('mysteryPlant');
+    name.classList.add('mystery');
+  }
+
+  const stageKey = 'stage' + p.stage.charAt(0).toUpperCase() + p.stage.slice(1);
+  stageLabel.textContent = t(stageKey);
+
+  pips.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const pip = document.createElement('div');
+    pip.className = 'pip' + (i < p.fertilizerCount ? ' filled' : '');
+    pips.appendChild(pip);
+  }
+}
+
+/* ===== 浇水 ===== */
+document.getElementById('waterBtn').addEventListener('click', () => {
+  if (!state.plant || state.plant.stage === 'mature') return;
+  if (state.tqiSinceWater < 5) { showToast(t('waterNotReady')); return; }
+  if (!canWaterToday()) { showToast(t('waterLimit')); return; }
+
+  state.tqiSinceWater -= 5;
+  state.lastWaterDate = todayLocal();
+
+  if (state.plant.stage === 'seed') state.plant.stage = 'sprout';
+  else if (state.plant.stage === 'sprout') state.plant.stage = 'growing';
+
+  const vis = document.getElementById('plantVisual');
+  vis.classList.add('grow');
+  setTimeout(() => vis.classList.remove('grow'), 600);
+
+  updatePlantUI();
+  updateActionButtons();
+  updateNextReward();
+  showToast(t('waterSuccess'));
+  saveState();
+});
+
+/* ===== 施肥 ===== */
+document.getElementById('fertilizeBtn').addEventListener('click', () => {
+  if (!state.plant || state.plant.stage === 'mature') return;
+  if (state.tqiSinceFertilize < 50) { showToast(t('fertNotReady')); return; }
+  if (state.plant.fertilizerCount >= 3) return;
+
+  state.tqiSinceFertilize -= 50;
+  state.plant.fertilizerCount++;
+
+  const vis = document.getElementById('plantVisual');
+  vis.classList.add('grow');
+  setTimeout(() => vis.classList.remove('grow'), 600);
+
+  if (state.plant.fertilizerCount >= 3) {
+    // 成熟：先强制过渡到 growing 一帧，再揭晓
+    if (state.plant.stage !== 'growing') {
+      state.plant.stage = 'growing';
+      updatePlantUI();
+    }
+    setTimeout(() => {
+      state.plant.stage = 'mature';
+      const revealedType = state.plant.type;
+
+      state.collection.push({
+        type: revealedType,
+        date: todayLocal()
+      });
+
+      vis.classList.add('reveal');
+      setTimeout(() => vis.classList.remove('reveal'), 1200);
+
+      const halo = document.getElementById('revealHalo');
+      halo.classList.add('fire');
+      setTimeout(() => halo.classList.remove('fire'), 1200);
+
+      const plantName = PLANT_NAMES[revealedType] ? PLANT_NAMES[revealedType][currentLang] : revealedType;
+      showToast(t('revealMsg', { name: plantName }), true);
+      setTimeout(() => showToast(t('matureMsg'), true), 1400);
+
+      updateCollectionUI();
+      state.isHarvestReady = true;
+      updatePlantUI();
+      updatePlantSeedButton();
+      updateActionButtons();
+      updateNextReward();
+      saveState();
+    }, 350);
+  } else {
+    if (state.plant.stage === 'seed') state.plant.stage = 'sprout';
+    else if (state.plant.stage === 'sprout') state.plant.stage = 'growing';
+    showToast(t('fertSuccess'));
+    updatePlantUI();
+    updateActionButtons();
+    updateNextReward();
+    saveState();
+  }
+});
+
+/* ===== 收藏（按类型聚合） ===== */
+function updateCollectionUI() {
+  const grid = document.getElementById('collectionGrid');
+  const countEl = document.getElementById('collectionCount');
+  countEl.textContent = state.collection.length;
+
+  if (state.collection.length === 0) {
+    grid.innerHTML = `<div class="collection-empty">${t('collectionEmpty')}</div>`;
+    return;
+  }
+
+  // 聚合：type -> { count, lastDate }
+  const agg = {};
+  state.collection.forEach(item => {
+    if (!agg[item.type]) agg[item.type] = { count: 0, lastDate: item.date };
+    agg[item.type].count++;
+    if (item.date > agg[item.type].lastDate) agg[item.type].lastDate = item.date;
+  });
+
+  grid.innerHTML = '';
+  Object.keys(agg).forEach(type => {
+    const data = agg[type];
+    const card = document.createElement('div');
+    card.className = 'collection-card';
+    card.innerHTML = `
+      ${data.count > 1 ? `<div class="count-badge">×${data.count}</div>` : ''}
+      <div class="icon">${MATURE_ICONS[type] || '🌳'}</div>
+      <div class="cname">${PLANT_NAMES[type] ? PLANT_NAMES[type][currentLang] : type}</div>
+      <div class="cdate">${data.lastDate}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/* ============================================================
+   VOCABULARY
+   ============================================================ */
+function renderVocabulary() {
+  const list = document.getElementById('vocabList');
+  const count = document.getElementById('vocabCount');
+  count.textContent = state.vocabulary.length;
+
+  if (state.vocabulary.length === 0) {
+    list.innerHTML = `<div class="vocab-empty">${t('vocabEmpty')}</div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  state.vocabulary.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'vocab-item';
+    div.innerHTML = `
+      <span class="word">${escapeHtml(item.word)}</span>
+      <button class="remove" title="Remove">✕</button>
+    `;
+    div.querySelector('.remove').addEventListener('click', () => {
+      state.vocabulary.splice(idx, 1);
+      renderVocabulary();
+      showToast(t('vocabRemoved'));
+      saveState();
+    });
+    list.appendChild(div);
+  });
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+document.getElementById('addVocabBtn').addEventListener('click', () => {
+  const input = document.getElementById('vocabInput');
+  const word = input.value.trim();
+  if (!word) return;
+  state.vocabulary.push({ word, added: new Date().toISOString() });
+  input.value = '';
+  renderVocabulary();
+  showToast(t('vocabAdded'));
+  saveState();
+});
+
+document.getElementById('vocabInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('addVocabBtn').click();
+});
+
+/* ============================================================
+   HIGHLIGHT POPUP
+   ============================================================ */
+const hlPopup = document.getElementById('hlPopup');
+
+document.querySelectorAll('.editor-textarea').forEach(ta => {
+  ta.addEventListener('mouseup', handleSelection);
+  ta.addEventListener('keyup', handleSelection);
+});
+
+function handleSelection() {
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || sel.toString().trim().length === 0) {
+    hlPopup.classList.remove('visible');
+    return;
+  }
+  const active = document.activeElement;
+  if (active && active.classList.contains('editor-textarea')) {
+    const rect = active.getBoundingClientRect();
+    hlPopup.style.left = (rect.left + rect.width / 2 - 50) + 'px';
+    hlPopup.style.top = (rect.top - 44) + 'px';
+    hlPopup.classList.add('visible');
+  }
+}
+
+document.querySelectorAll('.hl-dot').forEach(dot => {
+  dot.addEventListener('click', () => {
+    const active = document.activeElement;
+    let text = '';
+    if (active && active.classList.contains('editor-textarea')) {
+      text = active.value.substring(active.selectionStart, active.selectionEnd).trim();
+    }
+    if (!text) {
+      const sel = window.getSelection();
+      text = sel ? sel.toString().trim() : '';
+    }
+    if (text) {
+      state.vocabulary.push({ word: text, added: new Date().toISOString() });
+      renderVocabulary();
+      showToast(t('vocabAdded'));
+      saveState();
+    }
+    hlPopup.classList.remove('visible');
+  });
+});
+
+document.addEventListener('mousedown', e => {
+  if (!hlPopup.contains(e.target) && !e.target.classList.contains('editor-textarea')) {
+    hlPopup.classList.remove('visible');
+  }
+});
+
+/* ============================================================
+   PERSISTENCE
+   ============================================================ */
+function saveState() {
+  try {
+    localStorage.setItem('sakuraTranslationGarden', JSON.stringify({
+      tqi: state.tqi,
+      tqiSinceWater: state.tqiSinceWater,
+      tqiSinceFertilize: state.tqiSinceFertilize,
+      lastWaterDate: state.lastWaterDate,
+      plant: state.plant,
+      collection: state.collection,
+      vocabulary: state.vocabulary,
+      isHarvestReady: state.isHarvestReady
+    }));
+  } catch (e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('sakuraTranslationGarden');
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    Object.assign(state, saved);
+    state.resolvedIssues = new Set();
+  } catch (e) {}
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init() {
+  loadState();
+  applyLanguage();
+  updatePlantUI();
+  updatePlantSeedButton();
+  updateTQIDisplay();
+  updateNextReward();
+  updateActionButtons();
+  renderVocabulary();
+  updateCollectionUI();
+  document.getElementById('refreshHint').textContent = '可以反复修改、重新检测；每次 AI 检测可能产生 API 费用。';
+}
+
+init();
+</script>
+<script src="garden.js"></script>
+</body>
+</html>
