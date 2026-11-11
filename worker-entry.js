@@ -67,7 +67,7 @@ async function translate(request, env, path, origin) {
         {role: 'user', content: JSON.stringify(reference ? {source: input.source, target_hint: input.target_hint || '', audience: input.audience || '', goal: input.goal || '', tone: input.tone} : {source: input.source, target: input.target, tone: input.tone})}
       ]})
     });
-    if (!upstream.ok) return reply({error: upstream.status === 429 ? '模型服务繁忙或额度不足，请稍后再试' : '模型服务请求失败，请联系站点管理员检查配置'}, 502, origin);
+    if (!upstream.ok) return reply({error: upstream.status === 429 ? '模型服务繁忙或额度不足，请稍后再试' : '模型服务请求失败（HTTP ' + upstream.status + '），请联系站点管理员检查配置'}, 502, origin);
     const result = await upstream.json();
     const choice = result.choices?.[0];
     if (choice?.finish_reason !== 'stop') throw new Error('incomplete');
