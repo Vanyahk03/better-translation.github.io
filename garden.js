@@ -16,14 +16,12 @@ const check = document.getElementById('checkBtn'), cancel = document.getElementB
 const status = document.getElementById('requestStatus');
 let activeRequest = null;
 check.addEventListener('click', async () => {
-  status.textContent = '公开预览版尚未接入 AI 后端，暂不能检测翻译；你的文本未发送。';
-  return;
   if (activeRequest) return;
   const source = document.getElementById('sourceText').value.trim();
   const target = document.getElementById('targetText').value.trim();
   if (!source || !target) return showToast('请先填写原文和译文 🌷');
-  if (source.length > 16000 || target.length > 16000) return showToast('每段请控制在 16000 字以内');
-  const url = '/api/check';
+  if (source.length > 4000 || target.length > 4000) return showToast('每段请控制在 4000 字以内');
+  const url = 'https://better-translation-github-io.13621353397.workers.dev/api/check';
   const controller = new AbortController(); activeRequest = controller;
   let timedOut = false;
   const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 100000);
@@ -53,21 +51,19 @@ const referenceBtn = document.getElementById('referenceBtn');
 document.getElementById('audienceInput').maxLength = 120;
 document.getElementById('goalInput').maxLength = 200;
 referenceBtn.addEventListener('click', async () => {
-  status.textContent = '公开预览版尚未接入 AI 后端，暂不能生成参考译文；你的文本未发送。';
-  return;
   if (activeRequest) return;
   const sourceBox = document.getElementById('sourceText');
   const selectedSource = sourceBox.value.slice(sourceBox.selectionStart, sourceBox.selectionEnd).trim();
   const source = selectedSource || sourceBox.value.trim();
   if (!source) return showToast('请先填写原文 🌷');
-  if (source.length > 16000) return showToast('原文请控制在 16000 字以内');
+  if (source.length > 4000) return showToast('原文请控制在 4000 字以内');
   const controller = new AbortController(); activeRequest = controller;
   let timedOut = false;
   const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 100000);
   referenceBtn.disabled = true; check.disabled = true; cancel.hidden = false;
   status.textContent = '🌷 正在生成参考翻译样例…';
   try {
-    const response = await fetch('/api/reference', {method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({source,target_hint:document.getElementById('targetText').value.trim().slice(0,500),tone:document.getElementById('toneSelect').value,audience:document.getElementById('audienceInput').value.trim(),goal:document.getElementById('goalInput').value.trim()})});
+    const response = await fetch('https://better-translation-github-io.13621353397.workers.dev/api/reference', {method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({source,target_hint:document.getElementById('targetText').value.trim().slice(0,500),tone:document.getElementById('toneSelect').value,audience:document.getElementById('audienceInput').value.trim(),goal:document.getElementById('goalInput').value.trim()})});
     if (response.status === 404 || response.status === 501) throw Error('当前服务不支持参考译文，请使用 Python 服务启动项目');
     const data = await response.json().catch(() => { throw Error('服务返回了无效数据'); });
     if (!response.ok) throw Error(data.error || '暂时无法生成参考译文');
