@@ -1,0 +1,20 @@
+header { flex-wrap: wrap; gap: 10px; }
+.messages-view { grid-column: 1 / -1; min-width: 0; }
+.messages-view > .panel { max-width: 960px; margin: 0 auto; }
+.messages-hint { font-size: 12px; line-height: 1.8; color: var(--text-light); margin: 12px 0; }
+.message-search { display: block; font-size: 13px; color: var(--text-light); margin: 24px 0; }
+.message-search input { display: block; width: 100%; margin-top: 8px; padding: 12px 16px; border: 1px solid #ead1dc; background: #fffcfa; border-radius: 12px; font: inherit; }
+.messages-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
+.message-card { padding: 24px; border: 1px solid #ead1dc; border-radius: 18px; background: linear-gradient(140deg, #fffaf5, #fff1f5); overflow-wrap: anywhere; }
+.message-card blockquote, .quote-dialog blockquote { margin: 0; font: 20px/1.75 Georgia, serif; color: #68465a; }
+.quote-author { font-size: 13px; color: #94516e; margin: 16px 0; }
+.messages-empty { padding: 40px 12px; text-align: center; color: var(--text-light); line-height: 1.9; grid-column: 1 / -1; }
+.quote-dialog { width: min(500px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); overflow-y: auto; margin: auto; padding: 36px 28px; border: 1px solid #e7c7d3; border-radius: 26px; background: #fffaf5; color: var(--text); box-shadow: 0 20px 80px #68465a40; text-align: center; }
+.quote-dialog::backdrop { background: #50324866; backdrop-filter: blur(4px); }
+.quote-dialog form { position: relative; }
+.quote-dialog h2 { font-size: 22px; margin: 16px 0; }
+.quote-dialog blockquote { margin-top: 24px; overflow-wrap: anywhere; }
+.quote-dialog .btn-primary { margin-top: 16px; }
+.quote-flower { font-size: 38px; }
+.quote-close { position: absolute; right: -12px; top: -20px; padding: 6px 12px; background: none; border: 0; font-size: 26px; color: #94516e; cursor: pointer; }
+@media (max-width: 700px) { header .logo { width: 100%; } .quote-dialog { padding: 28px 22px; } }
