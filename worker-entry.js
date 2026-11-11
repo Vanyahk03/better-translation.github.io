@@ -59,7 +59,7 @@ async function translate(request, env, path, origin) {
     : 'You are a precise bilingual translation editor. Compare meaning, omissions, additions, grammar, terminology and tone. Explain in Chinese. Return JSON with summary (string), polished (complete translation in the target language), and issues (array, at most 12 items). Each issue must have string fields type, desc, suggestion, example with concrete quoted problems and improved segments. If no issues, return an empty array.';
   let upstream;
   try {
-    upstream = await fetch('https://api.chatanywhere.tech/v1/chat/completions', {
+    upstream = await fetch('https://api.chatanywhere.org/v1/chat/completions', {
       method: 'POST', signal: AbortSignal.timeout(85000),
       headers: {'Authorization': 'Bearer ' + env.OPENAI_API_KEY, 'Content-Type': 'application/json'},
       body: JSON.stringify({model: 'gpt-6.1-sol', max_tokens: 4000, temperature: 0.3, response_format: {type: 'json_object'}, messages: [
